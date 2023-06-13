@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
+import 'package:gra_miejska/menu.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 import 'package:flutter/material.dart';
@@ -19,6 +19,13 @@ List<Alignment> get getAlignments => [
 
 var counter = 0;
 var closed = true;
+
+void checkingAndConnectToGame(context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const MainMenu()),
+  );
+}
 
 class ConnectToGame extends StatefulWidget {
   const ConnectToGame({super.key});
@@ -70,7 +77,7 @@ class _ConnectToGame extends State<ConnectToGame> {
       }
     });
 
-    const interval = Duration(seconds: 5);
+    const interval = Duration(seconds: 1);
     Timer.periodic(
       interval,
       (Timer timer) {
@@ -82,8 +89,6 @@ class _ConnectToGame extends State<ConnectToGame> {
     );
   }
 
-  final _formKey = GlobalKey<FormState>();
-
   TextEditingController teamController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController nameController = TextEditingController();
@@ -93,7 +98,6 @@ class _ConnectToGame extends State<ConnectToGame> {
     final ButtonStyle style = ElevatedButton.styleFrom(
       textStyle: const TextStyle(fontSize: 20),
     );
-    final _formKey = GlobalKey<FormState>();
     return Scaffold(
       body: Stack(children: [
         AnimatedContainer(
@@ -111,7 +115,7 @@ class _ConnectToGame extends State<ConnectToGame> {
         ),
         Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-          Text(
+          const Text(
             "Dopisz się!",
             style: TextStyle(
                 fontFamily: 'Geologica', color: Colors.white, fontSize: 50),
@@ -120,18 +124,16 @@ class _ConnectToGame extends State<ConnectToGame> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: TextFormField(
               controller: teamController,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     // width: 0.0 produces a thin "hairline" border
-                    borderSide:
-                        const BorderSide(color: Colors.white, width: 0.0),
+                    borderSide: BorderSide(color: Colors.white, width: 0.0),
                   ),
-                  focusedBorder: const OutlineInputBorder(
+                  focusedBorder: OutlineInputBorder(
                     // width: 0.0 produces a thin "hairline" border
-                    borderSide:
-                        const BorderSide(color: Colors.white, width: 0.0),
+                    borderSide: BorderSide(color: Colors.white, width: 0.0),
                   ),
                   focusColor: Colors.white,
                   labelStyle: TextStyle(color: Colors.white),
@@ -142,21 +144,19 @@ class _ConnectToGame extends State<ConnectToGame> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextFormField(
               controller: passwordController,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
               obscureText: true,
               enableSuggestions: false,
               autocorrect: false,
               decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     // width: 0.0 produces a thin "hairline" border
-                    borderSide:
-                        const BorderSide(color: Colors.white, width: 0.0),
+                    borderSide: BorderSide(color: Colors.white, width: 0.0),
                   ),
-                  focusedBorder: const OutlineInputBorder(
+                  focusedBorder: OutlineInputBorder(
                     // width: 0.0 produces a thin "hairline" border
-                    borderSide:
-                        const BorderSide(color: Colors.white, width: 0.0),
+                    borderSide: BorderSide(color: Colors.white, width: 0.0),
                   ),
                   focusColor: Colors.white,
                   labelStyle: TextStyle(color: Colors.white),
@@ -187,33 +187,31 @@ class _ConnectToGame extends State<ConnectToGame> {
                 ),
               ),
             ),
-            child: Padding(
+            child: const Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Text(
                   'Zeskanuj kod',
                   style: TextStyle(fontSize: 16),
                 )),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: Divider(),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextFormField(
               controller: nameController,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     // width: 0.0 produces a thin "hairline" border
-                    borderSide:
-                        const BorderSide(color: Colors.white, width: 0.0),
+                    borderSide: BorderSide(color: Colors.white, width: 0.0),
                   ),
-                  focusedBorder: const OutlineInputBorder(
+                  focusedBorder: OutlineInputBorder(
                     // width: 0.0 produces a thin "hairline" border
-                    borderSide:
-                        const BorderSide(color: Colors.white, width: 0.0),
+                    borderSide: BorderSide(color: Colors.white, width: 0.0),
                   ),
                   focusColor: Colors.white,
                   labelStyle: TextStyle(color: Colors.white),
@@ -225,17 +223,18 @@ class _ConnectToGame extends State<ConnectToGame> {
             style: style,
             onPressed: () {
               // Validate returns true if the form is valid, or false otherwise.
-              if (!nameController.value.text.isEmpty &&
-                  !passwordController.value.text.isEmpty &&
-                  !teamController.value.text.isEmpty) {
+              if (nameController.value.text.isNotEmpty &&
+                  passwordController.value.text.isNotEmpty &&
+                  teamController.value.text.isNotEmpty) {
                 // If the form is valid, display a snackbar. In the real world,
                 // you'd often call a server or save the information in a database.
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Processing Data')),
                 );
+                checkingAndConnectToGame(context);
               }
             },
-            child: Padding(
+            child: const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Zaczynamy!',
@@ -243,7 +242,7 @@ class _ConnectToGame extends State<ConnectToGame> {
                 )),
           ),
         ])),
-        Align(
+        const Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
               padding: EdgeInsets.all(16.0),

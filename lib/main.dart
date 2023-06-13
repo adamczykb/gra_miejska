@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:gra_miejska/connect_to_game.dart';
+import 'package:gra_miejska/menu.dart';
 
 List<Color> get getColorsList => [
       const Color(0xFF05aea4),
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF1690ac)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: const MainMenu(),
     );
   }
 }
@@ -70,7 +71,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   ///Start animation.
   @override
   void initState() {
@@ -130,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 tileMode: TileMode.clamp,
               ),
             ),
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 1),
           ),
           Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
