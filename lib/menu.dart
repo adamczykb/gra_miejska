@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:gra_miejska/compas_page.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+// import 'package:geolocator/geolocator.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -18,23 +23,45 @@ class MainMenu extends StatefulWidget {
   State<MainMenu> createState() => _MainMenu();
 }
 
-MapController mapController = MapController(
-  // initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
-  initMapWithUserPosition: const UserTrackingOption(enableTracking: true),
-  areaLimit: BoundingBox(
-    east: 10.4922941,
-    north: 47.8084648,
-    south: 45.817995,
-    west: 5.9559113,
-  ),
-);
-
 class _MainMenu extends State<MainMenu> {
-  List<GeoPoint> points = [];
-  // [
-  //   GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-  //   GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
-  // ],
+  final MapController _mapController = MapController();
+  final List<LatLng> _latLngList = [
+    LatLng(13, 77.5),
+    LatLng(13.02, 77.51),
+    LatLng(13.05, 77.53),
+    LatLng(13.055, 77.54),
+    LatLng(13.059, 77.55),
+    LatLng(13.07, 77.55),
+    LatLng(13.1, 77.5342),
+    LatLng(13.12, 77.51),
+    LatLng(13.015, 77.53),
+    LatLng(13.155, 77.54),
+    LatLng(13.159, 77.55),
+    LatLng(13.17, 77.55),
+  ];
+  List<Marker> _markers = [];
+
+  late FollowOnLocationUpdate _followOnLocationUpdate;
+  late StreamController<double?> _followCurrentLocationStreamController;
+
+  @override
+  void initState() {
+    _followOnLocationUpdate = FollowOnLocationUpdate.always;
+    _followCurrentLocationStreamController = StreamController<double?>.broadcast();
+    _markers = _latLngList
+        .map((point) => Marker(
+              point: point,
+              width: 60,
+              height: 60,
+              builder: (context) => const Icon(
+                Icons.pin_drop,
+                size: 60,
+                color: Colors.blueAccent,
+              ),
+            ))
+        .toList();
+    super.initState();
+  }
 
   int currentPageIndex = 0;
   final ButtonStyle style = ElevatedButton.styleFrom(
@@ -80,63 +107,62 @@ class _MainMenu extends State<MainMenu> {
         Container(
           color: Colors.green,
           alignment: Alignment.center,
-          child: OSMFlutter(
-            controller: mapController,
-            // userTrackingOption: const UserTrackingOption(
-            //   enableTracking: true,
-            //   unFollowUser: false,
-            // ),
-            mapIsLoading: const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  Text("Map is Loading...")
-                ],
-              ),
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              center: _latLngList[0],
+              bounds: LatLngBounds.fromPoints(_latLngList),
+              onPositionChanged: (MapPosition position, bool hasGesture) {
+                if (hasGesture &&
+                    _followOnLocationUpdate != FollowOnLocationUpdate.never) {
+                  setState(
+                    () =>
+                        _followOnLocationUpdate = FollowOnLocationUpdate.never,
+                  );
+                }
+              },
+              //   plugins: [
+              //     MarkerClusterPlugin(),          ],
+              //   onTap: (_) => _popupController
+              //       .hidePopup(),
+              //
             ),
-            initZoom: 19,
-            // userLocationMarker: UserLocationMaker(
-            //   personMarker: const MarkerIcon(
-            //     icon: Icon(
-            //       Icons.location_history_rounded,
-            //       color: Colors.red,
-            //       size: 48,
-            //     ),
-            //   ),
-            //   directionArrowMarker: const MarkerIcon(
-            //     icon: Icon(
-            //       Icons.double_arrow,
-            //       size: 48,
-            //     ),
-            //   ),
-            // ),
-            markerOption: MarkerOption(
-              defaultMarker: const MarkerIcon(
-                icon: Icon(
-                  Icons.person_pin_circle,
-                  color: Colors.blue,
-                  size: 56,
-                ),
+            // ignore: sort_child_properties_last
+            children: [
+              TileLayer(
+                minZoom: 1,
+                maxZoom: 18,
+                backgroundColor: Colors.green,
+                urlTemplate:
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: const ['a', 'b', 'c'],
               ),
-            ),
-            staticPoints: [
-              StaticPositionGeoPoint(
-                "locations",
-                const MarkerIcon(
-                  icon: Icon(
-                    Icons.location_on,
-                    color: Colors.green,
-                    size: 80,
+              MarkerLayer(markers: _markers),
+              CurrentLocationLayer(
+                followCurrentLocationStream:
+                    _followCurrentLocationStreamController.stream,
+                followOnLocationUpdate: _followOnLocationUpdate,
+              ),
+            ],
+            nonRotatedChildren: [
+              Positioned(
+                right: 20,
+                bottom: 20,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    // Follow the location marker on the map when location updated until user interact with the map.
+                    setState(
+                      () => _followOnLocationUpdate =
+                          FollowOnLocationUpdate.always,
+                    );
+                    // Follow the location marker on the map and zoom the map to level 18.
+                    _followCurrentLocationStreamController.add(18);
+                  },
+                  child: const Icon(
+                    Icons.my_location,
+                    color: Colors.white,
                   ),
                 ),
-                // points
-                [
-                  GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-                  GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
-                ],
               ),
             ],
           ),
