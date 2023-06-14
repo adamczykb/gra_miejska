@@ -29,6 +29,12 @@ MapController mapController = MapController(
 );
 
 class _MainMenu extends State<MainMenu> {
+  List<GeoPoint> points = [];
+  // [
+  //   GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+  //   GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+  // ],
+
   int currentPageIndex = 0;
   final ButtonStyle style = ElevatedButton.styleFrom(
     textStyle: const TextStyle(fontSize: 20),
@@ -71,9 +77,39 @@ class _MainMenu extends State<MainMenu> {
           alignment: Alignment.center,
           child: OSMFlutter(
             controller: mapController,
-            initZoom: 21,
+            // userTrackingOption: const UserTrackingOption(
+            //   enableTracking: true,
+            //   unFollowUser: false,
+            // ),
+            mapIsLoading: const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  Text("Map is Loading...")
+                ],
+              ),
+            ),
+            initZoom: 19,
+            // userLocationMarker: UserLocationMaker(
+            //   personMarker: const MarkerIcon(
+            //     icon: Icon(
+            //       Icons.location_history_rounded,
+            //       color: Colors.red,
+            //       size: 48,
+            //     ),
+            //   ),
+            //   directionArrowMarker: const MarkerIcon(
+            //     icon: Icon(
+            //       Icons.double_arrow,
+            //       size: 48,
+            //     ),
+            //   ),
+            // ),
             markerOption: MarkerOption(
-              defaultMarker: MarkerIcon(
+              defaultMarker: const MarkerIcon(
                 icon: Icon(
                   Icons.person_pin_circle,
                   color: Colors.blue,
@@ -81,6 +117,23 @@ class _MainMenu extends State<MainMenu> {
                 ),
               ),
             ),
+            staticPoints: [
+              StaticPositionGeoPoint(
+                "locations",
+                const MarkerIcon(
+                  icon: Icon(
+                    Icons.location_on,
+                    color: Colors.green,
+                    size: 80,
+                  ),
+                ),
+                // points
+                [
+                  GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+                  GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                ],
+              ),
+            ],
           ),
         ),
         Container(
