@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:gra_miejska/compas_page.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
@@ -98,11 +97,7 @@ class _MainMenu extends State<MainMenu> {
         Container(
           color: Colors.red,
           alignment: Alignment.center,
-          child: CompassWidget(
-            destinationLatitude:
-                52.4034, // Przykładowe współrzędne punktu docelowego
-            destinationLongitude: 16.9150,
-          ),
+          child: const Text('Page 1'),
         ),
         Container(
           color: Colors.green,
