@@ -37,6 +37,9 @@ dependencies:
   cupertino_icons: ^1.0.2
   qr_code_scanner: ^1.0.1
   flutter_osm_plugin: ^0.55.1+1
+  geolocator: ^9.0.2
+  vector_math: ^2.1.4
+  flutter_compass: ^0.7.0
 
 dev_dependencies:
   flutter_test:

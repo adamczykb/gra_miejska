@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:gra_miejska/compas_page.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -70,7 +71,11 @@ class _MainMenu extends State<MainMenu> {
         Container(
           color: Colors.red,
           alignment: Alignment.center,
-          child: const Text('Page 1'),
+          child: CompassWidget(
+            destinationLatitude:
+                52.4034, // Przykładowe współrzędne punktu docelowego
+            destinationLongitude: 16.9150,
+          ),
         ),
         Container(
           color: Colors.green,
