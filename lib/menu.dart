@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:gra_miejska/compas_page.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
-// import 'package:geolocator/geolocator.dart';
+import 'package:nfc_manager/nfc_manager.dart';
+import 'package:nfc_manager/platform_tags.dart';
+import 'package:gra_miejska/compas_page.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -40,26 +41,54 @@ class _MainMenu extends State<MainMenu> {
     LatLng(13.17, 77.55),
   ];
   List<Marker> _markers = [];
+  // List<Marker> _markersOnTap = [];
 
   late FollowOnLocationUpdate _followOnLocationUpdate;
   late StreamController<double?> _followCurrentLocationStreamController;
+  // Stream<NDEFMessage> stream = NFC.readNDEF();
 
   @override
   void initState() {
     _followOnLocationUpdate = FollowOnLocationUpdate.always;
-    _followCurrentLocationStreamController = StreamController<double?>.broadcast();
+    _followCurrentLocationStreamController =
+        StreamController<double?>.broadcast();
     _markers = _latLngList
         .map((point) => Marker(
-              point: point,
-              width: 60,
-              height: 60,
-              builder: (context) => const Icon(
-                Icons.pin_drop,
-                size: 60,
-                color: Colors.blueAccent,
-              ),
-            ))
+            point: point,
+            width: 60,
+            height: 60,
+            builder: (context) => GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CompassWidget(
+                                destinationLatitude: point.latitude,
+                                destinationLongitude: point.longitude)));
+                  },
+                  child: const Icon(
+                    Icons.location_on,
+                    size: 60,
+                    color: Colors.blueAccent,
+                  ),
+                )))
         .toList();
+    NfcManager.instance.startSession(
+      onDiscovered: (NfcTag tag) async {
+        NfcA? ndef = NfcA.from(tag);
+        if (ndef == null) {
+          print('Tag is not compatible with NfcA');
+          return;
+        } else {
+          print(ndef.identifier);
+          String identifier = "";
+          for (int val in ndef.identifier) {
+            identifier += val.toString();
+          }
+          print(int.parse(identifier));
+        }
+      },
+    );
     super.initState();
   }
 
@@ -98,11 +127,7 @@ class _MainMenu extends State<MainMenu> {
         Container(
           color: Colors.red,
           alignment: Alignment.center,
-          child: CompassWidget(
-            destinationLatitude:
-                52.4034, // Przykładowe współrzędne punktu docelowego
-            destinationLongitude: 16.9150,
-          ),
+          child: const Text('Page 1'),
         ),
         Container(
           color: Colors.green,
@@ -111,6 +136,9 @@ class _MainMenu extends State<MainMenu> {
             mapController: _mapController,
             options: MapOptions(
               center: _latLngList[0],
+              interactiveFlags: InteractiveFlag.all &
+                  ~InteractiveFlag.rotate &
+                  ~InteractiveFlag.doubleTapZoom,
               bounds: LatLngBounds.fromPoints(_latLngList),
               onPositionChanged: (MapPosition position, bool hasGesture) {
                 if (hasGesture &&
@@ -121,11 +149,6 @@ class _MainMenu extends State<MainMenu> {
                   );
                 }
               },
-              //   plugins: [
-              //     MarkerClusterPlugin(),          ],
-              //   onTap: (_) => _popupController
-              //       .hidePopup(),
-              //
             ),
             // ignore: sort_child_properties_last
             children: [
@@ -137,12 +160,13 @@ class _MainMenu extends State<MainMenu> {
                     'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: const ['a', 'b', 'c'],
               ),
-              MarkerLayer(markers: _markers),
+              // MarkerLayer(markers: _markersOnTap),
               CurrentLocationLayer(
                 followCurrentLocationStream:
                     _followCurrentLocationStreamController.stream,
                 followOnLocationUpdate: _followOnLocationUpdate,
               ),
+              MarkerLayer(markers: _markers),
             ],
             nonRotatedChildren: [
               Positioned(
