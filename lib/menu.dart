@@ -1,11 +1,12 @@
 import 'dart:async';
-
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'connection_db.dart';
 import 'main.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:nfc_manager/platform_tags.dart';
@@ -45,6 +46,9 @@ class _MainMenu extends State<MainMenu> {
   ];
   List<Marker> _markers = [];
   String name = '';
+  String game_text = '';
+  String user_hash_id = '';
+  List<Widget> leaderboard = [];
   // List<Marker> _markersOnTap = [];
 
   late FollowOnLocationUpdate _followOnLocationUpdate;
@@ -58,7 +62,15 @@ class _MainMenu extends State<MainMenu> {
     SharedPreferences.getInstance().then((value) => {
           setState(() {
             name = value.getString('name')!;
-          })
+          }),
+          get_story(value.getString('hash_id')!).then((value2) => {
+                setState(() {
+                  game_text = value2;
+                  user_hash_id = value.getString('hash_id')!;
+                  getLeaderboard(user_hash_id)
+                      .then((value) => {leaderboard = value});
+                })
+              })
         });
 
     _followOnLocationUpdate = FollowOnLocationUpdate.always;
@@ -140,30 +152,29 @@ class _MainMenu extends State<MainMenu> {
             selectedIndex: currentPageIndex,
             destinations: const <Widget>[
               NavigationDestination(
-                icon: Icon(Icons.bookmark_border),
-                label: 'Informacje',
+                icon: ImageIcon(AssetImage('assets/log_1ldpi.png')),
+                label: 'Historia',
               ),
               NavigationDestination(
-                icon: Icon(Icons.explore),
+                icon: ImageIcon(AssetImage('assets/map_1ldpi.png')),
                 label: 'Mapa',
               ),
               NavigationDestination(
-                selectedIcon: Icon(Icons.bookmark),
-                icon: Icon(Icons.bookmark_border),
-                label: 'Zadania',
+                icon: ImageIcon(AssetImage('assets/ranking_1ldpi.png')),
+                label: 'Ranking',
               ),
             ],
           ),
           body: <Widget>[
-            Container(
+            SingleChildScrollView(
+                child: Container(
               color: Colors.white,
               alignment: Alignment.center,
-              child: CompassWidget(
-                destinationLatitude:
-                    52.4034, // Przykładowe współrzędne punktu docelowego
-                destinationLongitude: 16.9150,
-              ),
-            ),
+              child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  child: Text(game_text)),
+            )),
             Container(
               color: Colors.white,
               alignment: Alignment.center,
@@ -229,9 +240,10 @@ class _MainMenu extends State<MainMenu> {
               ),
             ),
             Container(
-              color: Colors.blue,
+              color: Colors.white,
               alignment: Alignment.center,
-              child: const Text('Page 3'),
+              child: ListView(
+                  padding: const EdgeInsets.all(8), children: leaderboard),
             ),
           ][currentPageIndex],
         ),
