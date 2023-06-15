@@ -40,7 +40,12 @@ dependencies:
   flutter_map_marker_cluster: any
   latlong2: any
   flutter_map_location_marker : any
-  geolocator: any
+  nfc_manager : any
+  geolocator: ^9.0.2
+  vector_math: ^2.1.4
+  flutter_compass: ^0.7.0
+  permission_handler: any
+  # flutter_map_marker_cluster: any
 
 dev_dependencies:
   flutter_test:
