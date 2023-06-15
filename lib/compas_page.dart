@@ -113,9 +113,8 @@ class _CompassWidgetState extends State<CompassWidget> {
           child: Container(
             padding: EdgeInsets.all(16.0),
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-            ),
+            decoration:
+                BoxDecoration(shape: BoxShape.circle, color: Color(0xFF1690ac)),
             child: Transform.rotate(
               angle: (direction * (math.pi / 180) * -1 + azimuth + 180 * -1),
               child: Icon(

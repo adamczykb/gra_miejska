@@ -5,6 +5,8 @@ import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 import 'package:flutter/material.dart';
 
+import 'connection_db.dart';
+
 List<Color> get getColorsList => [
       const Color(0xFF05aea4),
       const Color(0xFF1690ac),
@@ -19,12 +21,31 @@ List<Alignment> get getAlignments => [
 
 var counter = 0;
 var closed = true;
+final _formKey = GlobalKey<FormState>();
 
+TextEditingController teamController = TextEditingController();
+TextEditingController passwordController = TextEditingController();
+TextEditingController nameController = TextEditingController();
 void checkingAndConnectToGame(context) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const MainMenu()),
-  );
+  if (_formKey.currentState!.validate()) {
+    join(teamController.value.text, passwordController.value.text,
+            nameController.value.text)
+        .then((value) => {
+              if (value)
+                {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MainMenu()),
+                  )
+                }
+              else
+                {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Złe dane dołączeniowe')),
+                  )
+                }
+            });
+  }
 }
 
 class ConnectToGame extends StatefulWidget {
@@ -89,10 +110,6 @@ class _ConnectToGame extends State<ConnectToGame> {
     );
   }
 
-  TextEditingController teamController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  TextEditingController nameController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     final ButtonStyle style = ElevatedButton.styleFrom(
@@ -113,135 +130,160 @@ class _ConnectToGame extends State<ConnectToGame> {
           ),
           duration: const Duration(seconds: 2),
         ),
-        Center(
-            child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-          const Text(
-            "Dopisz się!",
-            style: TextStyle(
-                fontFamily: 'Geologica', color: Colors.white, fontSize: 50),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: TextFormField(
-              controller: teamController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    // width: 0.0 produces a thin "hairline" border
-                    borderSide: BorderSide(color: Colors.white, width: 0.0),
+        SingleChildScrollView(
+            child: Form(
+                key: _formKey,
+                child:
+                    Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                  const SizedBox(height: 64),
+                  const Text(
+                    "Dopisz się!",
+                    style: TextStyle(
+                        fontFamily: 'Geologica',
+                        color: Colors.white,
+                        fontSize: 50),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    // width: 0.0 produces a thin "hairline" border
-                    borderSide: BorderSide(color: Colors.white, width: 0.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 24),
+                    child: TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Pole nie może być puste';
+                        }
+                        return null;
+                      },
+                      controller: teamController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            // width: 0.0 produces a thin "hairline" border
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 0.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            // width: 0.0 produces a thin "hairline" border
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 0.0),
+                          ),
+                          focusColor: Colors.white,
+                          labelStyle: TextStyle(color: Colors.white),
+                          labelText: "Nazwa drużyny"),
+                    ),
                   ),
-                  focusColor: Colors.white,
-                  labelStyle: TextStyle(color: Colors.white),
-                  labelText: "Nazwa drużyny"),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextFormField(
-              controller: passwordController,
-              style: const TextStyle(color: Colors.white),
-              obscureText: true,
-              enableSuggestions: false,
-              autocorrect: false,
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    // width: 0.0 produces a thin "hairline" border
-                    borderSide: BorderSide(color: Colors.white, width: 0.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextFormField(
+                      controller: passwordController,
+                      style: const TextStyle(color: Colors.white),
+                      obscureText: true,
+                      enableSuggestions: false,
+                      autocorrect: false,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Pole nie może być puste';
+                        }
+                        return null;
+                      },
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            // width: 0.0 produces a thin "hairline" border
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 0.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            // width: 0.0 produces a thin "hairline" border
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 0.0),
+                          ),
+                          focusColor: Colors.white,
+                          labelStyle: TextStyle(color: Colors.white),
+                          labelText: "Hasło drużyny"),
+                    ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    // width: 0.0 produces a thin "hairline" border
-                    borderSide: BorderSide(color: Colors.white, width: 0.0),
-                  ),
-                  focusColor: Colors.white,
-                  labelStyle: TextStyle(color: Colors.white),
-                  labelText: "Hasło drużyny"),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            style: style,
-            onPressed: () => showDialog<String>(
-              context: context,
-              builder: (BuildContext context) => Dialog(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      _buildQrView(context),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Close'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: style,
+                    onPressed: () => showDialog<String>(
+                      context: context,
+                      builder: (BuildContext context) => Dialog(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              _buildQrView(context),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
+                    child: const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: Text(
+                          'Zeskanuj kod',
+                          style: TextStyle(fontSize: 16),
+                        )),
                   ),
-                ),
-              ),
-            ),
-            child: const Padding(
-                padding: EdgeInsets.all(12.0),
-                child: Text(
-                  'Zeskanuj kod',
-                  style: TextStyle(fontSize: 16),
-                )),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Divider(),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextFormField(
-              controller: nameController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    // width: 0.0 produces a thin "hairline" border
-                    borderSide: BorderSide(color: Colors.white, width: 0.0),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                    child: Divider(),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    // width: 0.0 produces a thin "hairline" border
-                    borderSide: BorderSide(color: Colors.white, width: 0.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextFormField(
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.length < 2) {
+                          return 'Imię musi być dłuższe niż 2 znaki';
+                        }
+                        return null;
+                      },
+                      controller: nameController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            // width: 0.0 produces a thin "hairline" border
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 0.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            // width: 0.0 produces a thin "hairline" border
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 0.0),
+                          ),
+                          focusColor: Colors.white,
+                          labelStyle: TextStyle(color: Colors.white),
+                          labelText: "Twoje Imię"),
+                    ),
                   ),
-                  focusColor: Colors.white,
-                  labelStyle: TextStyle(color: Colors.white),
-                  labelText: "Twoje Imię"),
-            ),
-          ),
-          const SizedBox(height: 50),
-          ElevatedButton(
-            style: style,
-            onPressed: () {
-              // Validate returns true if the form is valid, or false otherwise.
-              if (nameController.value.text.isNotEmpty &&
-                  passwordController.value.text.isNotEmpty &&
-                  teamController.value.text.isNotEmpty) {
-                // If the form is valid, display a snackbar. In the real world,
-                // you'd often call a server or save the information in a database.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Processing Data')),
-                );
-                checkingAndConnectToGame(context);
-              }
-            },
-            child: const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Zaczynamy!',
-                  style: TextStyle(fontFamily: 'Geologica'),
-                )),
-          ),
-        ])),
+                  const SizedBox(height: 50),
+                  ElevatedButton(
+                    style: style,
+                    onPressed: () {
+                      // Validate returns true if the form is valid, or false otherwise.
+
+                      checkingAndConnectToGame(context);
+                    },
+                    child: const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text(
+                          'Zaczynamy!',
+                          style: TextStyle(fontFamily: 'Geologica'),
+                        )),
+                  ),
+                ]))),
         const Align(
           alignment: Alignment.bottomCenter,
           child: Padding(

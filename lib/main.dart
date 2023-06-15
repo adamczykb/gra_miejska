@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:gra_miejska/connect_to_game.dart';
 import 'package:gra_miejska/menu.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 List<Color> get getColorsList => [
       const Color(0xFF05aea4),
@@ -49,7 +50,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF1690ac)),
         useMaterial3: true,
       ),
-      home: const MainMenu(),
+      home: const MyHomePage(),
     );
   }
 }
@@ -72,9 +73,26 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   ///Start animation.
+  ///
+  @override
+  Future<bool> popRoute() async {
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
+
+    final prefs = SharedPreferences.getInstance().then((value) => {
+          if (value.containsKey('hash_id') && value.containsKey('name'))
+            {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MainMenu()),
+              )
+            }
+        });
+
     _startBgColorAnimationTimer();
   }
 
@@ -107,67 +125,72 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return Scaffold(
-      // appBar: AppBar(
-      //   // TRY THIS: Try changing the color here to a specific color (to
-      //   // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-      //   // change color while the other colors stay the same.
-      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      //   // Here we take the value from the MyHomePage object that was created by
-      //   // the App.build method, and use it to set our appbar title.
-      //   title: Text(widget.title),
-      // ),
-      body: Stack(
-        children: [
-          AnimatedContainer(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: getAlignments[counter % getAlignments.length],
-                end: getAlignments[(counter) % getAlignments.length],
-                colors: getColorsList,
-                tileMode: TileMode.clamp,
+    return WillPopScope(
+        child: Scaffold(
+          // appBar: AppBar(
+          //   // TRY THIS: Try changing the color here to a specific color (to
+          //   // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+          //   // change color while the other colors stay the same.
+          //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          //   // Here we take the value from the MyHomePage object that was created by
+          //   // the App.build method, and use it to set our appbar title.
+          //   title: Text(widget.title),
+          // ),
+          body: Stack(
+            children: [
+              AnimatedContainer(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: getAlignments[counter % getAlignments.length],
+                    end: getAlignments[(counter) % getAlignments.length],
+                    colors: getColorsList,
+                    tileMode: TileMode.clamp,
+                  ),
+                ),
+                duration: const Duration(seconds: 1),
               ),
-            ),
-            duration: const Duration(seconds: 1),
+              Center(
+                  child:
+                      Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                Image(
+                    image: NetworkImage(
+                        'http://144.24.185.119:1100/media/logo.png'),
+                    height: 200),
+                const SizedBox(height: 50),
+                ElevatedButton(
+                  style: style,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ConnectToGame()),
+                    );
+                  },
+                  child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'Zacznij przygodę',
+                        style: TextStyle(fontFamily: 'Geologica'),
+                      )),
+                ),
+              ])),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      "Bartosz Adamczyk, Filip Sudziński",
+                      style: TextStyle(
+                          fontFamily: 'Geologica', color: Colors.white),
+                    )),
+              ),
+            ],
           ),
-          Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            Image(
-                image: NetworkImage(
-                    'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg'),
-                height: 200),
-            const SizedBox(height: 50),
-            ElevatedButton(
-              style: style,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ConnectToGame()),
-                );
-              },
-              child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    'Zacznij przygodę',
-                    style: TextStyle(fontFamily: 'Geologica'),
-                  )),
-            ),
-          ])),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "Bartosz Adamczyk, Filip Sudziński",
-                  style:
-                      TextStyle(fontFamily: 'Geologica', color: Colors.white),
-                )),
-          ),
-        ],
-      ),
-    );
+        ),
+        onWillPop: () async {
+          return false;
+        });
   }
 }

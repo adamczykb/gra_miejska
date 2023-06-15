@@ -5,6 +5,9 @@ import 'package:gra_miejska/compas_page.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'main.dart';
 // import 'package:geolocator/geolocator.dart';
 
 class MainMenu extends StatefulWidget {
@@ -40,14 +43,28 @@ class _MainMenu extends State<MainMenu> {
     LatLng(13.17, 77.55),
   ];
   List<Marker> _markers = [];
-
+  String name = '';
   late FollowOnLocationUpdate _followOnLocationUpdate;
   late StreamController<double?> _followCurrentLocationStreamController;
 
   @override
+  Future<bool> popRoute() async {
+    return false;
+  }
+
+  @override
   void initState() {
+    super.initState();
+
+    SharedPreferences.getInstance().then((value) => {
+          setState(() {
+            name = value.getString('name')!;
+          })
+        });
+
     _followOnLocationUpdate = FollowOnLocationUpdate.always;
-    _followCurrentLocationStreamController = StreamController<double?>.broadcast();
+    _followCurrentLocationStreamController =
+        StreamController<double?>.broadcast();
     _markers = _latLngList
         .map((point) => Marker(
               point: point,
@@ -60,7 +77,6 @@ class _MainMenu extends State<MainMenu> {
               ),
             ))
         .toList();
-    super.initState();
   }
 
   int currentPageIndex = 0;
@@ -70,109 +86,130 @@ class _MainMenu extends State<MainMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
-            icon: Icon(Icons.bookmark_border),
-            label: 'Informacje',
+    return WillPopScope(
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Color(0xFF1690ac),
+            leading: IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                onPressed: () => {
+                      SharedPreferences.getInstance().then((value) => {
+                            value.clear().then((value) => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const MyHomePage()),
+                                ))
+                          })
+                    }),
+            title: Text(name),
+            titleTextStyle: TextStyle(color: Colors.white, fontSize: 25),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.explore),
-            label: 'Mapa',
+          bottomNavigationBar: NavigationBar(
+            onDestinationSelected: (int index) {
+              setState(() {
+                currentPageIndex = index;
+              });
+            },
+            selectedIndex: currentPageIndex,
+            destinations: const <Widget>[
+              NavigationDestination(
+                icon: Icon(Icons.bookmark_border),
+                label: 'Informacje',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.explore),
+                label: 'Mapa',
+              ),
+              NavigationDestination(
+                selectedIcon: Icon(Icons.bookmark),
+                icon: Icon(Icons.bookmark_border),
+                label: 'Zadania',
+              ),
+            ],
           ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.bookmark),
-            icon: Icon(Icons.bookmark_border),
-            label: 'Zadania',
-          ),
-        ],
-      ),
-      body: <Widget>[
-        Container(
-          color: Colors.red,
-          alignment: Alignment.center,
-          child: CompassWidget(
-            destinationLatitude:
-                52.4034, // Przykładowe współrzędne punktu docelowego
-            destinationLongitude: 16.9150,
-          ),
-        ),
-        Container(
-          color: Colors.green,
-          alignment: Alignment.center,
-          child: FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              center: _latLngList[0],
-              bounds: LatLngBounds.fromPoints(_latLngList),
-              onPositionChanged: (MapPosition position, bool hasGesture) {
-                if (hasGesture &&
-                    _followOnLocationUpdate != FollowOnLocationUpdate.never) {
-                  setState(
-                    () =>
-                        _followOnLocationUpdate = FollowOnLocationUpdate.never,
-                  );
-                }
-              },
-              //   plugins: [
-              //     MarkerClusterPlugin(),          ],
-              //   onTap: (_) => _popupController
-              //       .hidePopup(),
-              //
+          body: <Widget>[
+            Container(
+              color: Colors.white,
+              alignment: Alignment.center,
+              child: CompassWidget(
+                destinationLatitude:
+                    52.4034, // Przykładowe współrzędne punktu docelowego
+                destinationLongitude: 16.9150,
+              ),
             ),
-            // ignore: sort_child_properties_last
-            children: [
-              TileLayer(
-                minZoom: 1,
-                maxZoom: 18,
-                backgroundColor: Colors.green,
-                urlTemplate:
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c'],
-              ),
-              MarkerLayer(markers: _markers),
-              CurrentLocationLayer(
-                followCurrentLocationStream:
-                    _followCurrentLocationStreamController.stream,
-                followOnLocationUpdate: _followOnLocationUpdate,
-              ),
-            ],
-            nonRotatedChildren: [
-              Positioned(
-                right: 20,
-                bottom: 20,
-                child: FloatingActionButton(
-                  onPressed: () {
-                    // Follow the location marker on the map when location updated until user interact with the map.
-                    setState(
-                      () => _followOnLocationUpdate =
-                          FollowOnLocationUpdate.always,
-                    );
-                    // Follow the location marker on the map and zoom the map to level 18.
-                    _followCurrentLocationStreamController.add(18);
+            Container(
+              color: Colors.white,
+              alignment: Alignment.center,
+              child: FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  center: _latLngList[0],
+                  bounds: LatLngBounds.fromPoints(_latLngList),
+                  onPositionChanged: (MapPosition position, bool hasGesture) {
+                    if (hasGesture &&
+                        _followOnLocationUpdate !=
+                            FollowOnLocationUpdate.never) {
+                      setState(
+                        () => _followOnLocationUpdate =
+                            FollowOnLocationUpdate.never,
+                      );
+                    }
                   },
-                  child: const Icon(
-                    Icons.my_location,
-                    color: Colors.white,
-                  ),
+                  //   plugins: [
+                  //     MarkerClusterPlugin(),          ],
+                  //   onTap: (_) => _popupController
+                  //       .hidePopup(),
+                  //
                 ),
+                // ignore: sort_child_properties_last
+                children: [
+                  TileLayer(
+                    minZoom: 1,
+                    maxZoom: 18,
+                    backgroundColor: Colors.white,
+                    urlTemplate:
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: const ['a', 'b', 'c'],
+                  ),
+                  MarkerLayer(markers: _markers),
+                  CurrentLocationLayer(
+                    followCurrentLocationStream:
+                        _followCurrentLocationStreamController.stream,
+                    followOnLocationUpdate: _followOnLocationUpdate,
+                  ),
+                ],
+                nonRotatedChildren: [
+                  Positioned(
+                    right: 20,
+                    bottom: 20,
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        // Follow the location marker on the map when location updated until user interact with the map.
+                        setState(
+                          () => _followOnLocationUpdate =
+                              FollowOnLocationUpdate.always,
+                        );
+                        // Follow the location marker on the map and zoom the map to level 18.
+                        _followCurrentLocationStreamController.add(18);
+                      },
+                      child: const Icon(
+                        Icons.my_location,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Container(
+              color: Colors.blue,
+              alignment: Alignment.center,
+              child: const Text('Page 3'),
+            ),
+          ][currentPageIndex],
         ),
-        Container(
-          color: Colors.blue,
-          alignment: Alignment.center,
-          child: const Text('Page 3'),
-        ),
-      ][currentPageIndex],
-    );
+        onWillPop: () async {
+          return false;
+        });
   }
 }
