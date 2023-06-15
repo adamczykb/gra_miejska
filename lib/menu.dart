@@ -1,14 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:gra_miejska/compas_page.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'main.dart';
-// import 'package:geolocator/geolocator.dart';
+import 'package:nfc_manager/nfc_manager.dart';
+import 'package:nfc_manager/platform_tags.dart';
+import 'package:gra_miejska/compas_page.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -44,13 +45,11 @@ class _MainMenu extends State<MainMenu> {
   ];
   List<Marker> _markers = [];
   String name = '';
+  // List<Marker> _markersOnTap = [];
+
   late FollowOnLocationUpdate _followOnLocationUpdate;
   late StreamController<double?> _followCurrentLocationStreamController;
-
-  @override
-  Future<bool> popRoute() async {
-    return false;
-  }
+  // Stream<NDEFMessage> stream = NFC.readNDEF();
 
   @override
   void initState() {
@@ -65,18 +64,46 @@ class _MainMenu extends State<MainMenu> {
     _followOnLocationUpdate = FollowOnLocationUpdate.always;
     _followCurrentLocationStreamController =
         StreamController<double?>.broadcast();
+    _followCurrentLocationStreamController =
+        StreamController<double?>.broadcast();
     _markers = _latLngList
         .map((point) => Marker(
-              point: point,
-              width: 60,
-              height: 60,
-              builder: (context) => const Icon(
-                Icons.pin_drop,
-                size: 60,
-                color: Colors.blueAccent,
-              ),
-            ))
+            point: point,
+            width: 60,
+            height: 60,
+            builder: (context) => GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CompassWidget(
+                                destinationLatitude: point.latitude,
+                                destinationLongitude: point.longitude)));
+                  },
+                  child: const Icon(
+                    Icons.location_on,
+                    size: 60,
+                    color: Colors.blueAccent,
+                  ),
+                )))
         .toList();
+    NfcManager.instance.startSession(
+      onDiscovered: (NfcTag tag) async {
+        NfcA? ndef = NfcA.from(tag);
+        if (ndef == null) {
+          print('Tag is not compatible with NfcA');
+          return;
+        } else {
+          print(ndef.identifier);
+          String identifier = "";
+          for (int val in ndef.identifier) {
+            identifier += val.toString();
+          }
+          print(int.parse(identifier));
+        }
+      },
+    );
+    super.initState();
   }
 
   int currentPageIndex = 0;
