@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:gra_miejska/task.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,35 +32,80 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenu extends State<MainMenu> {
   final MapController _mapController = MapController();
-  final List<LatLng> _latLngList = [
-    LatLng(13, 77.5),
-    LatLng(13.02, 77.51),
-    LatLng(13.05, 77.53),
-    LatLng(13.055, 77.54),
-    LatLng(13.059, 77.55),
-    LatLng(13.07, 77.55),
-    LatLng(13.1, 77.5342),
-    LatLng(13.12, 77.51),
-    LatLng(13.015, 77.53),
-    LatLng(13.155, 77.54),
-    LatLng(13.159, 77.55),
-    LatLng(13.17, 77.55),
-  ];
+  List<LatLng> _latLngList_todo = [];
+  List<LatLng> _latLngList_done = [];
   List<Marker> _markers = [];
+  List<LatLng> bounds = [
+    LatLng(52.406040208654, 16.928127138423804),
+  ];
   String name = '';
   String game_text = '';
   String user_hash_id = '';
   List<Widget> leaderboard = [];
-  // List<Marker> _markersOnTap = [];
 
   late FollowOnLocationUpdate _followOnLocationUpdate;
   late StreamController<double?> _followCurrentLocationStreamController;
-  // Stream<NDEFMessage> stream = NFC.readNDEF();
+
+  List<Marker> get_markers() {
+    get_points(user_hash_id).then((value) => {
+          setState(() {
+            var mapped_todo = value['todo']
+                .map((point) => LatLng(point[0], point[1]))
+                .toList();
+            _latLngList_todo = List<LatLng>.from(mapped_todo);
+            var mapped_done = value['done']
+                .map((point) => LatLng(point[0], point[1]))
+                .toList();
+            _latLngList_done = List<LatLng>.from(mapped_done);
+          })
+        });
+    print("OUTSIDE");
+    print(_latLngList_todo);
+    print(_latLngList_done);
+
+    List<Marker> _markers_todo = _latLngList_todo
+        .map((point) => Marker(
+            point: point,
+            width: 60,
+            height: 60,
+            builder: (context) => GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CompassWidget(
+                                destinationLatitude: point.latitude,
+                                destinationLongitude: point.longitude)));
+                  },
+                  child: const Icon(Icons.location_on,
+                      size: 60, color: Colors.blueAccent),
+                )))
+        .toList();
+    List<Marker> _markers_done = _latLngList_done
+        .map((point) => Marker(
+            point: point,
+            width: 60,
+            height: 60,
+            builder: (context) => GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CompassWidget(
+                                destinationLatitude: point.latitude,
+                                destinationLongitude: point.longitude)));
+                  },
+                  child: const Icon(Icons.location_on,
+                      size: 60, color: Colors.grey),
+                )))
+        .toList();
+    // bounds = _latLngList_done;
+    print(_markers_todo + _markers_done);
+    return _markers_todo + _markers_done;
+  }
 
   @override
   void initState() {
-    super.initState();
-
     SharedPreferences.getInstance().then((value) => {
           setState(() {
             name = value.getString('name')!;
@@ -77,27 +124,6 @@ class _MainMenu extends State<MainMenu> {
     _followCurrentLocationStreamController =
         StreamController<double?>.broadcast();
 
-    _markers = _latLngList
-        .map((point) => Marker(
-            point: point,
-            width: 60,
-            height: 60,
-            builder: (context) => GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => CompassWidget(
-                                destinationLatitude: point.latitude,
-                                destinationLongitude: point.longitude)));
-                  },
-                  child: const Icon(
-                    Icons.location_on,
-                    size: 60,
-                    color: Colors.blueAccent,
-                  ),
-                )))
-        .toList();
     NfcManager.instance.startSession(
       onDiscovered: (NfcTag tag) async {
         NfcA? ndef = NfcA.from(tag);
@@ -105,15 +131,18 @@ class _MainMenu extends State<MainMenu> {
           print('Tag is not compatible with NfcA');
           return;
         } else {
-          print(ndef.identifier);
           String identifier = "";
           for (int val in ndef.identifier) {
             identifier += val.toString();
           }
-          print(int.parse(identifier));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => TaskGame(task_id: identifier)));
         }
       },
     );
+    get_markers();
     super.initState();
   }
 
@@ -180,8 +209,11 @@ class _MainMenu extends State<MainMenu> {
               child: FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
-                  center: _latLngList[0],
-                  bounds: LatLngBounds.fromPoints(_latLngList),
+                  center: LatLng(52.0, 16.0),
+                  interactiveFlags: InteractiveFlag.all &
+                      ~InteractiveFlag.rotate &
+                      ~InteractiveFlag.doubleTapZoom,
+                  bounds: LatLngBounds.fromPoints(bounds),
                   onPositionChanged: (MapPosition position, bool hasGesture) {
                     if (hasGesture &&
                         _followOnLocationUpdate !=
@@ -192,11 +224,6 @@ class _MainMenu extends State<MainMenu> {
                       );
                     }
                   },
-                  //   plugins: [
-                  //     MarkerClusterPlugin(),          ],
-                  //   onTap: (_) => _popupController
-                  //       .hidePopup(),
-                  //
                 ),
                 // ignore: sort_child_properties_last
                 children: [
@@ -208,12 +235,12 @@ class _MainMenu extends State<MainMenu> {
                         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                     subdomains: const ['a', 'b', 'c'],
                   ),
-                  MarkerLayer(markers: _markers),
                   CurrentLocationLayer(
                     followCurrentLocationStream:
                         _followCurrentLocationStreamController.stream,
                     followOnLocationUpdate: _followOnLocationUpdate,
                   ),
+                  MarkerLayer(markers: _markers),
                 ],
                 nonRotatedChildren: [
                   Positioned(

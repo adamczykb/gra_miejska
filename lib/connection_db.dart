@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:latlong2/latlong.dart';
 
 Future<bool> join(String team, String password, String name) async {
   try {
@@ -53,36 +55,25 @@ Future<String> get_story(String user_hash_id) async {
   }
 }
 
-Future<List<Widget>> getLeaderboard(String user_hash_id) async {
+Future<Map<String, dynamic>> get_points(String user_hash_id) async {
   try {
     final response = await http.get(Uri(
         scheme: 'http',
         host: '144.24.185.119',
         port: 1100,
-        path: 'get_leaderboard/',
+        path: 'get_points/',
         queryParameters: {
           'user_hash_id': user_hash_id,
         }));
     if (response.statusCode == 200) {
-      return json
-          .decode(response.body)['response']
-          .map<Widget>((element) => Card(
-              child: ListTile(
-                  title: Text(
-                      element['name'] +
-                          ', punkty: ' +
-                          element['score'].toString(),
-                      style: TextStyle(
-                          color:
-                              element['users'] ? Colors.red : Colors.black)))))
-          .toList();
+      return json.decode(response.body);
     } else {
-      return <Widget>[];
+      return {};
     }
   } on SocketException {
-    return <Widget>[];
+    return {};
   } on Exception {
-    return <Widget>[];
+    return {};
   }
 }
 
@@ -128,5 +119,38 @@ Future<bool> set_answer(
     return false;
   } on Exception {
     return false;
+  }
+}
+
+Future<List<Widget>> getLeaderboard(String user_hash_id) async {
+  try {
+    final response = await http.get(Uri(
+        scheme: 'http',
+        host: '144.24.185.119',
+        port: 1100,
+        path: 'get_leaderboard/',
+        queryParameters: {
+          'user_hash_id': user_hash_id,
+        }));
+    if (response.statusCode == 200) {
+      return json
+          .decode(response.body)['response']
+          .map<Widget>((element) => Card(
+              child: ListTile(
+                  title: Text(
+                      element['name'] +
+                          ', punkty: ' +
+                          element['score'].toString(),
+                      style: TextStyle(
+                          color:
+                              element['users'] ? Colors.red : Colors.black)))))
+          .toList();
+    } else {
+      return <Widget>[];
+    }
+  } on SocketException {
+    return <Widget>[];
+  } on Exception {
+    return <Widget>[];
   }
 }
