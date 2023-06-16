@@ -42,66 +42,72 @@ class _MainMenu extends State<MainMenu> {
   String game_text = '';
   String user_hash_id = '';
   List<Widget> leaderboard = [];
-
+  List<Marker> _markers_todo = [];
+  List<Marker> _markers_done = [];
   late FollowOnLocationUpdate _followOnLocationUpdate;
   late StreamController<double?> _followCurrentLocationStreamController;
 
-  List<Marker> get_markers() {
-    get_points(user_hash_id).then((value) => {
-          setState(() {
-            var mapped_todo = value['todo']
-                .map((point) => LatLng(point[0], point[1]))
-                .toList();
-            _latLngList_todo = List<LatLng>.from(mapped_todo);
-            var mapped_done = value['done']
-                .map((point) => LatLng(point[0], point[1]))
-                .toList();
-            _latLngList_done = List<LatLng>.from(mapped_done);
-          })
-        });
+  void get_markers() {
+    get_points(user_hash_id)
+        .then((value) => {
+              setState(() {
+                var mapped_todo = value['todo']
+                    .map((point) => LatLng(point[0], point[1]))
+                    .toList();
+                _latLngList_todo = List<LatLng>.from(mapped_todo);
+                var mapped_done = value['done']
+                    .map((point) => LatLng(point[0], point[1]))
+                    .toList();
+                _latLngList_done = List<LatLng>.from(mapped_done);
+              })
+            })
+        .then((value) => {
+              setState(() {
+                _markers_todo = _latLngList_todo
+                    .map((point) => Marker(
+                        point: point,
+                        width: 60,
+                        height: 60,
+                        builder: (context) => GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => CompassWidget(
+                                            destinationLatitude: point.latitude,
+                                            destinationLongitude:
+                                                point.longitude)));
+                              },
+                              child: const Icon(Icons.location_on,
+                                  size: 60, color: Colors.blueAccent),
+                            )))
+                    .toList();
+                _markers_done = _latLngList_done
+                    .map((point) => Marker(
+                        point: point,
+                        width: 60,
+                        height: 60,
+                        builder: (context) => GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => CompassWidget(
+                                            destinationLatitude: point.latitude,
+                                            destinationLongitude:
+                                                point.longitude)));
+                              },
+                              child: const Icon(Icons.location_on,
+                                  size: 60, color: Colors.grey),
+                            )))
+                    .toList();
+                print(_latLngList_todo);
+                print(_latLngList_done);
+              })
+            });
     print("OUTSIDE");
-    print(_latLngList_todo);
-    print(_latLngList_done);
 
-    List<Marker> _markers_todo = _latLngList_todo
-        .map((point) => Marker(
-            point: point,
-            width: 60,
-            height: 60,
-            builder: (context) => GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => CompassWidget(
-                                destinationLatitude: point.latitude,
-                                destinationLongitude: point.longitude)));
-                  },
-                  child: const Icon(Icons.location_on,
-                      size: 60, color: Colors.blueAccent),
-                )))
-        .toList();
-    List<Marker> _markers_done = _latLngList_done
-        .map((point) => Marker(
-            point: point,
-            width: 60,
-            height: 60,
-            builder: (context) => GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => CompassWidget(
-                                destinationLatitude: point.latitude,
-                                destinationLongitude: point.longitude)));
-                  },
-                  child: const Icon(Icons.location_on,
-                      size: 60, color: Colors.grey),
-                )))
-        .toList();
     // bounds = _latLngList_done;
-    print(_markers_todo + _markers_done);
-    return _markers_todo + _markers_done;
   }
 
   @override
@@ -110,14 +116,16 @@ class _MainMenu extends State<MainMenu> {
           setState(() {
             name = value.getString('name')!;
           }),
-          get_story(value.getString('hash_id')!).then((value2) => {
-                setState(() {
-                  game_text = value2;
-                  user_hash_id = value.getString('hash_id')!;
-                  getLeaderboard(user_hash_id)
-                      .then((value) => {leaderboard = value});
-                })
-              })
+          get_story(value.getString('hash_id')!)
+              .then((value2) => {
+                    setState(() {
+                      game_text = value2;
+                      user_hash_id = value.getString('hash_id')!;
+                      getLeaderboard(user_hash_id)
+                          .then((value) => {leaderboard = value});
+                    })
+                  })
+              .then((value) => get_markers())
         });
 
     _followOnLocationUpdate = FollowOnLocationUpdate.always;
@@ -142,7 +150,7 @@ class _MainMenu extends State<MainMenu> {
         }
       },
     );
-    get_markers();
+
     super.initState();
   }
 
@@ -240,7 +248,7 @@ class _MainMenu extends State<MainMenu> {
                         _followCurrentLocationStreamController.stream,
                     followOnLocationUpdate: _followOnLocationUpdate,
                   ),
-                  MarkerLayer(markers: _markers),
+                  MarkerLayer(markers: _markers_done + _markers_todo),
                 ],
                 nonRotatedChildren: [
                   Positioned(
