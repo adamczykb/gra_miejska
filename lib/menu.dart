@@ -270,6 +270,25 @@ class _MainMenu extends State<MainMenu> {
                       ),
                     ),
                   ),
+                  Positioned(
+                    right: 20,
+                    bottom: 100,
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        // Follow the location marker on the map when location updated until user interact with the map.
+                        setState(() => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const MainMenu()),
+                            ));
+                        // Follow the location marker on the map and zoom the map to level 18.
+                      },
+                      child: const Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
                 ],
               ),
             ),
