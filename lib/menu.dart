@@ -76,8 +76,7 @@ class _MainMenu extends State<MainMenu> {
     _followOnLocationUpdate = FollowOnLocationUpdate.always;
     _followCurrentLocationStreamController =
         StreamController<double?>.broadcast();
-    _followCurrentLocationStreamController =
-        StreamController<double?>.broadcast();
+
     _markers = _latLngList
         .map((point) => Marker(
             point: point,

@@ -85,3 +85,48 @@ Future<List<Widget>> getLeaderboard(String user_hash_id) async {
     return <Widget>[];
   }
 }
+
+Future<String> get_task_text(String user_hash_id, String task_id) async {
+  try {
+    final response = await http.get(Uri(
+        scheme: 'http',
+        host: '144.24.185.119',
+        port: 1100,
+        path: 'get_task/',
+        queryParameters: {'user_hash_id': user_hash_id, 'task_id': task_id}));
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      return '';
+    }
+  } on SocketException {
+    return '';
+  } on Exception {
+    return '';
+  }
+}
+
+Future<bool> set_answer(
+    String user_hash_id, String task_id, String answer) async {
+  try {
+    final response = await http.get(Uri(
+        scheme: 'http',
+        host: '144.24.185.119',
+        port: 1100,
+        path: 'set_answer/',
+        queryParameters: {
+          'user_hash_id': user_hash_id,
+          'task_id': task_id,
+          'answer': answer
+        }));
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  } on SocketException {
+    return false;
+  } on Exception {
+    return false;
+  }
+}
