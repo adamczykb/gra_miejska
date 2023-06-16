@@ -157,7 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Image(
                     image: NetworkImage(
                         'http://144.24.185.119:1100/media/logo.png'),
-                    height: 200),
+                    fit: BoxFit.contain),
                 const SizedBox(height: 50),
                 ElevatedButton(
                   style: style,
