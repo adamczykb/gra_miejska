@@ -154,7 +154,7 @@ class _MainMenu extends State<MainMenu> {
     super.initState();
   }
 
-  int currentPageIndex = 0;
+  int currentPageIndex = 1;
   final ButtonStyle style = ElevatedButton.styleFrom(
     textStyle: const TextStyle(fontSize: 20),
   );
